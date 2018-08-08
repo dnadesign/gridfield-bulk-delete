@@ -82,10 +82,6 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
         
 		$optionsField->setForm($gridField->getForm());
 
-		if ($this->message) {
-			$optionsField->setError($this->message, $this->status);
-		}
-
 		$buttonTitle = (count($options) > 1) ? 'Go' : $default_option_label;
 
 		$button = new GridField_FormAction(
@@ -99,7 +95,16 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 		$button->setForm($gridField->getForm());
 		$button->addExtraClass('bulkdelete_button');
 
-		$fragment = sprintf('<div><table><tr><td style="vertical-align:top;">%s</td><td style="vertical-align:top;"><div style="margin-left: 7px;">%s</div></td></tr></table></div>', $optionsField->FieldHolder(), $button->Field());
+		// Set message
+		if ($this->message) {
+			if (count($options) > 1) {
+				$optionsField->setError($this->message, $this->status);
+			}
+		}
+
+		$template = '<div><table><tr><td style="vertical-align:top;">%s</td><td style="vertical-align:top;"><div style="margin-left: 7px;">%s</div></td></tr></table></div>';
+
+		$fragment = sprintf($template, $optionsField->FieldHolder(), $button->Field());
 
 		return array(
 			$this->targetFragment => $fragment
@@ -155,6 +160,12 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
 			$this->message = sprintf('As more than %s records have to be deleted, a job as been queued in the background. You will get an email when the task is complete.', $this->use_queued_threshold);
 			$this->status = 'warning';
+
+			Controller::curr()->getResponse()->setStatusCode(
+                200,
+                $this->message
+            );
+
 			return;
 		} 
 
@@ -168,6 +179,12 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
 		$this->message = sprintf('%s records have been successfully deleted.', count($ids));
 		$this->status = 'good';
+
+		Controller::curr()->getResponse()->setStatusCode(
+            200,
+            $this->message
+        );
+
 		return;
 	}
 
