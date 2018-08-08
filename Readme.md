@@ -45,8 +45,8 @@ NOTE: Set the value to 0 or -1 to never use queued jobs.
 In your `mysite/_config/config.yml` file:
 
 	GridFieldBulkDeleteForm:
-  		delete_up_to:
-    		'30 days' : 'Delete records created over a month ago (%s)'
+	  delete_up_to:
+	    '30 days' : 'Delete records created over a month ago (%s)'
 
 NOTE: Value must be valid for use with `DateTime` modify().
 Also, supply a label for `sprintf()` where the number of record affected will be supplied as param.

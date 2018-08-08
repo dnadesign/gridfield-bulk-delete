@@ -29,7 +29,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
 	public function getHTMLFragments($gridField)
     {
-        $records = $gridField->getList();
+        $records = $gridField->getManipulatedList();
         if (!$records->exists()) {
         	// If a message exists, but no record
         	// it means we have deleted them all
@@ -133,7 +133,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 	{
 		$controller = $gridField->getForm()->Controller();
 		$request = $controller->getRequest();
-		$records = $gridField->getList();
+		$records = $gridField->getManipulatedList();
 		$parent = $controller->currentPage();
 
 		$until = $request->postVar('BulkDeleteUntil');
