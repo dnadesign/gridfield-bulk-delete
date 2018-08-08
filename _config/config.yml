@@ -1,0 +1,6 @@
+---
+Name: gridfield-bulkdelete
+---
+LeftAndMain:
+  extra_requirements_javascript:
+    - 'gridfield-bulk-delete/cms/bulkdelete_confirm.js'
