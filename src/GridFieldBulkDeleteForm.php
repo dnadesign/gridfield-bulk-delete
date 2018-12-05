@@ -29,7 +29,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
 	public function getHTMLFragments($gridField)
     {
-        $records = $gridField->getManipulatedList();
+        $records = $this->getFilteredRecordList($gridField);
         if (!$records->exists()) {
         	// If a message exists, but no record
         	// it means we have deleted them all
@@ -133,7 +133,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 	{
 		$controller = $gridField->getForm()->Controller();
 		$request = $controller->getRequest();
-		$records = $gridField->getManipulatedList();
+		$records = $this->getFilteredRecordList($gridField);
 		$parent = $controller->currentPage();
 
 		$until = $request->postVar('BulkDeleteUntil');
@@ -188,4 +188,20 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 		return;
 	}
 
+	/**
+	* To get the entire list of records with the potential filters
+	* we need to remove the pagination but apply all other filters
+	*/
+	public function getFilteredRecordList($gridfield)
+	{
+		$list = $gridfield->getList();
+
+		foreach($gridfield->getComponents() as $item) {
+			if($item instanceof GridField_DataManipulator && !$item instanceof GridFieldPaginator) {
+				$list = $item->getManipulatedData($gridfield, $list);
+			}
+		}
+
+		return $list;
+	}
 }
