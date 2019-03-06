@@ -1,6 +1,6 @@
 ---
 Name: gridfield-bulkdelete
 ---
-LeftAndMain:
+SilverStripe\Admin\LeftAndMain:
   extra_requirements_javascript:
     - 'gridfield-bulk-delete/cms/bulkdelete_confirm.js'

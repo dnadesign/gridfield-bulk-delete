@@ -1,136 +1,146 @@
 <?php
 
-class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob {
+namespace DNADesign\GridFieldBulkDelete;
 
-	/*
-	* Requires to pass a DataList of objects to be deleted
-	* @param Datalist
-	* @param String
-	* @param Member
-	*/
-	public function __construct() 
-	{
-		$args = array_filter(func_get_args());
+use Psr\Log\LoggerInterface;
+use SilverStripe\Control\Email\Email;
+use SilverStripe\Core\Injector\Injector;
+use Symbiote\QueuedJobs\Services\QueuedJob;
+use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
+use SilverStripe\Subsites\Model\Subsite;
 
-		if (isset($args[0])) {
-			$list = $args[0];
+class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob
+{
 
-			$this->ids = $list->column('ID');
-			$this->dataClass = $list->dataClass();			
-		}
+    /*
+    * Requires to pass a DataList of objects to be deleted
+    * @param Datalist
+    * @param String
+    * @param Member
+    */
+    public function __construct()
+    {
+        $args = array_filter(func_get_args());
 
-		if (isset($args[1])) {
-			$this->Title = $args[1];
-		}
+        if (isset($args[0])) {
+            $list = $args[0];
 
-		if (isset($args[2])) {
-			$this->User = $args[2];
-		}
-	}
+            $this->ids = $list->column('ID');
+            $this->dataClass = $list->dataClass();
+        }
 
-	/**
-	 * Defines the title of the job
-	 *
-	 * @return string
-	 */
-	public function getTitle() 
-	{
-		$title = ($this->Title) ? $this->Title : sprintf('Delete %s %s', count($this->ids), $this->dataClass);
-		
-		if ($this->User) {
-			return $title .= sprintf(' (Initiated by %s)', $this->User->getTitle());
-		}
+        if (isset($args[1])) {
+            $this->Title = $args[1];
+        }
 
-		return $title;
-	}
-	
-	/**
-	 * Indicate to the system which queue we think we should be in based
-	 * on how many objects we're going to touch on while processing.
-	 *
-	 * We want to make sure we also set how many steps we think we might need to take to
-	 * process everything - note that this does not need to be 100% accurate, but it's nice
-	 * to give a reasonable approximation
-	 *
-	 * @return int
-	 */
-	public function getJobType() 
-	{
-		$this->totalSteps = count($this->ids);
-		return QueuedJob::QUEUED;
-	}
+        if (isset($args[2])) {
+            $this->User = $args[2];
+        }
+    }
 
-	/**
-	* 
-	*/
-	public function setup() {
-		$remainingChildren = $this->ids;
-		$this->remainingChildren = $remainingChildren;
-	}
+    /**
+     * Defines the title of the job
+     *
+     * @return string
+     */
+    public function getTitle()
+    {
+        $title = ($this->Title) ? $this->Title : sprintf('Delete %s %s', count($this->ids), $this->dataClass);
+        
+        if ($this->User) {
+            return $title .= sprintf(' (Initiated by %s)', $this->User->getTitle());
+        }
 
-	/**
-	 * Lets process one ID at the time
-	 */
-	public function process() 
-	{
-		$remainingChildren = $this->remainingChildren;
+        return $title;
+    }
+    
+    /**
+     * Indicate to the system which queue we think we should be in based
+     * on how many objects we're going to touch on while processing.
+     *
+     * We want to make sure we also set how many steps we think we might need to take to
+     * process everything - note that this does not need to be 100% accurate, but it's nice
+     * to give a reasonable approximation
+     *
+     * @return int
+     */
+    public function getJobType()
+    {
+        $this->totalSteps = count($this->ids);
+        return QueuedJob::QUEUED;
+    }
 
-		// if there's no more, we're done!
-		if (!count($remainingChildren)) {
-			$this->isComplete = true;
-			$this->handleCompletion();
-			return;
-		}		
+    /**
+    *
+    */
+    public function setup()
+    {
+        $remainingChildren = $this->ids;
+        $this->remainingChildren = $remainingChildren;
+    }
 
-		$class = $this->dataClass;
-		$ID = array_shift($remainingChildren);
+    /**
+     * Lets process one ID at the time
+     */
+    public function process()
+    {
+        $remainingChildren = $this->remainingChildren;
 
-		$record = null;
+        // if there's no more, we're done!
+        if (!count($remainingChildren)) {
+            $this->isComplete = true;
+            $this->handleCompletion();
+            return;
+        }
 
-		if (class_exists('Subsite')) {
-			$records = Subsite::get_from_all_subsites($class, ['ID' => $ID]);
-			if ($records && $records->exists()) {
-				$record = $records->First();
-			}
-		} else {
-			$record = $class::get()->byID($ID);
-		}
+        $class = $this->dataClass;
+        $ID = array_shift($remainingChildren);
 
-		if (!$record || !$record->exists()) {
-			$message = sprintf('%s ID %s not found!', $class, $ID);
-			$this->addMessage($message, 'WARNING');
-			SS_Log::log($message, SS_Log::WARN);
-		}
-		else {
-			$created = $record->dbObject('Created')->Nice();
-			$record->delete();
-			$this->addMessage(sprintf('Deleted %s ID %s (%s)', $class, $ID, $created), 'WARNING');
-		}
+        $record = null;
 
-		// Update counter
-		$this->currentStep++;
-		$this->remainingChildren = $remainingChildren;	
-	}
+        if (class_exists('Subsite')) {
+            $records = Subsite::get_from_all_subsites($class, ['ID' => $ID]);
+            if ($records && $records->exists()) {
+                $record = $records->First();
+            }
+        } else {
+            $record = $class::get()->byID($ID);
+        }
 
-	/**
-	* Send an email to the supplied user
-	* upon completion
-	*/
-	public function handleCompletion()
-	{
-		$member = $this->User;
+        if (!$record || !$record->exists()) {
+            $message = sprintf('%s ID %s not found!', $class, $ID);
+            $this->addMessage($message, 'WARNING');
+            Injector::inst()->get(LoggerInterface::class)->warning($message);
+        } else {
+            $created = $record->dbObject('Created')->Nice();
+            $record->delete();
+            $this->addMessage(sprintf('Deleted %s ID %s (%s)', $class, $ID, $created), 'WARNING');
+        }
 
-		if ($member && $member->exists()) {
-			$email = new Email();
-			$email->setTo($member->Email);
-			$email->setSubject('A deletion task requested by you has completed.');
+        // Update counter
+        $this->currentStep++;
+        $this->remainingChildren = $remainingChildren;
+    }
 
-			$message = sprintf('<p>Hi, %s</p>', $member->getTitle());
-			$message .= sprintf('<p>Job %s has completed.</p>', $this->Title);
-			$message .= sprintf('<p>%s records have been deleted.</p>', $this->totalSteps);
-			$email->setBody($message);
+    /**
+    * Send an email to the supplied user
+    * upon completion
+    */
+    public function handleCompletion()
+    {
+        $member = $this->User;
 
-			return $email->send();
-		}
-	}
+        if ($member && $member->exists()) {
+            $email = new Email();
+            $email->setTo($member->Email);
+            $email->setSubject('A deletion task requested by you has completed.');
+
+            $message = sprintf('<p>Hi, %s</p>', $member->getTitle());
+            $message .= sprintf('<p>Job %s has completed.</p>', $this->Title);
+            $message .= sprintf('<p>%s records have been deleted.</p>', $this->totalSteps);
+            $email->setBody($message);
+
+            return $email->send();
+        }
+    }
 }
