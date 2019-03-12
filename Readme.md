@@ -8,7 +8,7 @@ If there is more than 50 records (can be configured) and if QueuedJobs are avail
 The component can be configured to allow deleting records older than a certain period of time (eg: older tha 30 days). 
 
 ## Requirements
-* [silverstripe/framework](https://github.com/silverstripe/framework)
+* [silverstripe/framework](https://github.com/silverstripe/framework) ^4.0
 
 ## Install
 Add the following to your composer.json file
