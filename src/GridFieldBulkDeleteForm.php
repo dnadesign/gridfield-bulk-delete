@@ -151,7 +151,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
      */
     public function handleBulkDelete($gridField, $request = null)
     {
-        $controller = $gridField->getForm()->Controller();
+        $controller = $gridField->getForm()->getController();
         $request = $controller->getRequest();
         $records = $this->getFilteredRecordList($gridField);
         $parent = $controller->currentPage();
