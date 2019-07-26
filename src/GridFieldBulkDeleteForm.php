@@ -84,8 +84,8 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
             }
 
             foreach ($up_to as $interval => $label) {
-                $date = new DBDateTime();
-                $date->modify('-'.$interval);
+                $date = new \DateTime();
+                $date->modify('-' . $interval);
 
                 if ($date !== false) {
                     $toDelete = $records->filter('Created:LessThan', $date->format('Y-m-d 00:00:00'))->Count();
