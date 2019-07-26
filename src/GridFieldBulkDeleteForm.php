@@ -2,19 +2,18 @@
 
 namespace DNADesign\GridFieldBulkDelete;
 
-use SilverStripe\Forms\FormField;
 use SilverStripe\Security\Member;
 use SilverStripe\Forms\HiddenField;
-use SilverStripe\Control\Controller;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Forms\DropdownField;
-use SilverStripe\ORM\FieldType\DBDateTime;
-use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\Forms\GridField\GridFieldPaginator;
-use SilverStripe\Forms\GridField\GridField_FormAction;
 use SilverStripe\Forms\GridField\GridField_HTMLProvider;
-use SilverStripe\Forms\GridField\GridField_ActionProvider;
+use SilverStripe\Forms\GridField\GridField_FormAction;
 use SilverStripe\Forms\GridField\GridField_DataManipulator;
+use SilverStripe\Forms\GridField\GridField_ActionProvider;
+use SilverStripe\Forms\GridField\GridFieldPaginator;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Control\Controller;
 use DNADesign\GridFieldBulkDelete\QueuedBulkDeleteJob;
 
 /**
@@ -49,6 +48,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
     public function getHTMLFragments($gridField)
     {
+        $form = $gridField->getForm();
         $records = $this->getFilteredRecordList($gridField);
         if (!$records->exists()) {
             // If a message exists, but no record
@@ -84,8 +84,8 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
             }
 
             foreach ($up_to as $interval => $label) {
-                $date = new \DateTime();
-                $date->modify('-' . $interval);
+                $date = new \DateTime(); // note: core php class
+                $date->modify('-'.$interval);
 
                 if ($date !== false) {
                     $toDelete = $records->filter('Created:LessThan', $date->format('Y-m-d 00:00:00'))->Count();
@@ -118,7 +118,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
         // Set message
         if ($this->message) {
             if (count($options) > 1) {
-                $optionsField->setError($this->message, $this->status);
+                $form->setMessage($this->message, $this->status);
             }
         }
 
@@ -158,7 +158,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
         $until = $request->postVar('BulkDeleteUntil');
         if (!empty($until) && $until !== 'now') {
-            $date = new DBDateTime();
+            $date = new \DateTime();
             $date->modify('-'.$until);
 
             if ($date !== false) {

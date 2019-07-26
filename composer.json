@@ -1,7 +1,7 @@
 {
 	"name": "dnadesign/gridfield-bulk-delete",
 	"description": "A GridField component allowing to delete records in bulk",
-	"type": "silverstripe-module",
+	"type": "silverstripe-vendormodule",
 	"keywords": [
 		"silverstripe", 
 		"gridfield", 
@@ -9,15 +9,27 @@
 		"delete"
 	],
 	"license": "BSD-3-Clause",
-	"minimum-stability": "dev",
-	"prefer-stable": true,
 	"authors": [
         {
             "name": "DNA Designed Communications Limited",
             "email": "dev@dna.co.nz"
         }
     ],
+	"minimum-stability": "dev",
+	"prefer-stable": true,
 	"require": {
-        "silverstripe/vendor-plugin": "^1.0"
+		"silverstripe/cms": "^4.4@dev",
+        "silverstripe/admin": "^1.4@dev",
+        "silverstripe/vendor-plugin": "^1"
+	},
+	"extra": {
+        "expose": [
+            "client/js"
+        ]
+    },
+	"autoload": {
+        "psr-4": {
+            "DNADesign\\GridFieldBulkDelete\\": "src/"
+        }
     }
 }
