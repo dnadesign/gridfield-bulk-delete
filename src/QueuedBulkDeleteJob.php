@@ -4,38 +4,28 @@ namespace DNADesign\GridFieldBulkDelete;
 
 use Psr\Log\LoggerInterface;
 use SilverStripe\Control\Email\Email;
+use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Injector\Injector;
-use Symbiote\QueuedJobs\Services\QueuedJob;
-use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
+use SilverStripe\Security\Member;
 use SilverStripe\Subsites\Model\Subsite;
+use Symbiote\QueuedJobs\Services\AbstractQueuedJob;
+use Symbiote\QueuedJobs\Services\QueuedJob;
 
 class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob
 {
-
     /*
     * Requires to pass a DataList of objects to be deleted
     * @param Datalist
     * @param String
     * @param Member
     */
-    public function __construct()
+    public function setInitialData($dataClass, $ids, $title = null, $userID = null)
     {
-        $args = array_filter(func_get_args());
+        $this->ids = $ids;
+        $this->dataClass = $dataClass;
 
-        if (isset($args[0])) {
-            $list = $args[0];
-
-            $this->ids = $list->column('ID');
-            $this->dataClass = $list->dataClass();
-        }
-
-        if (isset($args[1])) {
-            $this->Title = $args[1];
-        }
-
-        if (isset($args[2])) {
-            $this->User = $args[2];
-        }
+        $this->Title = $title;
+        $this->UserID = $userID;
     }
 
     /**
@@ -45,10 +35,13 @@ class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob
      */
     public function getTitle()
     {
-        $title = ($this->Title) ? $this->Title : sprintf('Delete %s %s', count($this->ids), $this->dataClass);
+        $title = ($this->Title) ? $this->Title : sprintf('Delete %s %s', count($this->ids), ClassInfo::shortName($this->dataClass));
         
-        if ($this->User) {
-            return $title .= sprintf(' (Initiated by %s)', $this->User->getTitle());
+        if ($this->UserID) {
+            $member = Member::get()->byID($this->UserID);
+            if ($member && $member->exists()) {
+                $title .= sprintf(' (Initiated by %s)', $member->getTitle());
+            }
         }
 
         return $title;
@@ -98,10 +91,10 @@ class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob
 
         $record = null;
 
-        if (class_exists('Subsite')) {
+        if (class_exists(Subsite::class)) {
             $records = Subsite::get_from_all_subsites($class, ['ID' => $ID]);
             if ($records && $records->exists()) {
-                $record = $records->First();
+                $record = $records->first();
             }
         } else {
             $record = $class::get()->byID($ID);
@@ -112,10 +105,15 @@ class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob
             $this->addMessage($message, 'WARNING');
             Injector::inst()->get(LoggerInterface::class)->warning($message);
         } else {
-            $created = $record->dbObject('Created')->Nice();
-            $record->delete();
-            $this->addMessage(sprintf('Deleted %s ID %s (%s)', $class, $ID, $created), 'WARNING');
+            $this->addMessage(sprintf('Deleted %s ID %s (%s)', $class, $ID, $record->dbObject('Created')->Nice()), 'WARNING');
         }
+
+        $record = null;
+        $records = null;
+        $message = null;
+        unset($record);
+        unset($records);
+        unset($message);
 
         // Update counter
         $this->currentStep++;
@@ -128,7 +126,11 @@ class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob
     */
     public function handleCompletion()
     {
-        $member = $this->User;
+        if (!$this->UserID) {
+            return;
+        }
+
+        $member = Member::get()->byID($this->UserID);
 
         if ($member && $member->exists()) {
             $email = new Email();

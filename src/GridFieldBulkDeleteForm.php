@@ -2,27 +2,30 @@
 
 namespace DNADesign\GridFieldBulkDelete;
 
-use SilverStripe\Security\Member;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\GridField\GridField_HTMLProvider;
-use SilverStripe\Forms\GridField\GridField_FormAction;
-use SilverStripe\Forms\GridField\GridField_DataManipulator;
-use SilverStripe\Forms\GridField\GridField_ActionProvider;
-use SilverStripe\Forms\GridField\GridFieldPaginator;
-use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\Forms\FormField;
-use SilverStripe\Forms\DropdownField;
-use SilverStripe\Core\Config\Config;
-use SilverStripe\Control\Controller;
 use DNADesign\GridFieldBulkDelete\QueuedBulkDeleteJob;
+use SilverStripe\Control\Controller;
+use SilverStripe\Core\ClassInfo;
+use SilverStripe\Core\Config\Config;
+use SilverStripe\Forms\DropdownField;
+use SilverStripe\Forms\FormField;
+use SilverStripe\Forms\GridField\GridField;
+use SilverStripe\Forms\GridField\GridField_ActionProvider;
+use SilverStripe\Forms\GridField\GridField_DataManipulator;
+use SilverStripe\Forms\GridField\GridField_FormAction;
+use SilverStripe\Forms\GridField\GridField_HTMLProvider;
+use SilverStripe\Forms\GridField\GridFieldPaginator;
+use SilverStripe\Forms\HiddenField;
+use SilverStripe\Security\Member;
+use SilverStripe\Security\Security;
+use Symbiote\QueuedJobs\Services\QueuedJobService;
 
 /**
 * Adds a dropdown and a button
-* Allowig users to delete records in the gridfield in bulk
+* Allowing users to delete records in the GridField in bulk
 * with the option to delete only records older than 1,2,3 or 6 months.
 *
 * Also, if available, a queued job will be used if too many record need to be deleted.
-* Both this task and queuedjob loop trhough the record and invoke "delete"
+* Both this task and QueuedJob loop through the record and invoke "delete"
 * so any dependant record may be deleted as well.
 *
 */
@@ -168,15 +171,17 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
         // If more than 50 record are to be deleted
         // Use a QueuedJob
-        if (class_exists('QueuedJobService')
+        if (class_exists(QueuedJobService::class)
             && $this->use_queued_threshold >= 0
             && $records->Count() > $this->use_queued_threshold
         ) {
             $from = ($parent && $parent->hasMethod('getTitle')) ? $parent->getTitle() : $parent->Name;
-            $title = sprintf('Delete %s record (%s) from %s', $records->Count(), FormField::name_to_label($records->dataClass()), $from);
+            $title = sprintf('Delete %s record (%s) from %s', $records->Count(), FormField::name_to_label(ClassInfo::shortName($gridField->getModelClass())), $from);
+            $userID = ($member = Security::getCurrentUser()) ? $member->ID : null;
             
-            $job = new QueuedBulkDeleteJob($records, $title, Member::currentUser());
-            singleton('QueuedJobService')->queueJob($job);
+            $job = new QueuedBulkDeleteJob();
+            $job->setInitialData($gridField->getModelClass(), $records->column('ID'), $title, $userID);
+            QueuedJobService::singleton()->queueJob($job);
 
             $this->message = sprintf('As more than %s records have to be deleted, a job as been queued in the background. You will get an email when the task is complete.', $this->use_queued_threshold);
             $this->status = 'warning';

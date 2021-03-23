@@ -11,15 +11,12 @@ The component can be configured to allow deleting records older than a certain p
 * [silverstripe/framework](https://github.com/silverstripe/framework)
 
 ## Install
-Add the following to your composer.json file
 
 ```
-
-    "require"          : {
-		"dnadesign/gridfield-bulk-delete": "0.1"
-	}
-
+composer require dnadesign/gridfield-bulk-delete ^1
 ```
+
+NOTE: for SS3, use version 0.2
 
 ## Configuration
 
@@ -50,3 +47,7 @@ In your `mysite/_config/config.yml` file:
 
 NOTE: Value must be valid for use with `DateTime` modify().
 Also, supply a label for `sprintf()` where the number of record affected will be supplied as param.
+
+## Next improvments:
+
+- Delete the records in chunks instead of one big Job that will run out of memory
