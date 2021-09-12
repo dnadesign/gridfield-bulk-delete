@@ -152,12 +152,13 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
     /**
      * Handle the export, for both the action button and the URL
      */
-    public function handleBulkDelete($gridField, $request = null)
+    public function handleBulkDelete($gridField)
     {
         $controller = $gridField->getForm()->getController();
         $request = $controller->getRequest();
+
         $records = $this->getFilteredRecordList($gridField);
-        $parent = $controller->currentPage();
+        $from = $controller->SectionTitle();
 
         $until = $request->postVar('BulkDeleteUntil');
         if (!empty($until) && $until !== 'now') {
@@ -175,7 +176,6 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
             && $this->use_queued_threshold >= 0
             && $records->Count() > $this->use_queued_threshold
         ) {
-            $from = ($parent && $parent->hasMethod('getTitle')) ? $parent->getTitle() : $parent->Name;
             $title = sprintf('Delete %s record (%s) from %s', $records->Count(), FormField::name_to_label(ClassInfo::shortName($gridField->getModelClass())), $from);
             $userID = ($member = Security::getCurrentUser()) ? $member->ID : null;
             

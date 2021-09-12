@@ -10,11 +10,11 @@
 	],
 	"license": "BSD-3-Clause",
 	"authors": [
-        {
-            "name": "DNA Designed Communications Limited",
-            "email": "dev@dna.co.nz"
-        }
-    ],
+		{
+			"name": "DNA Designed Communications Limited",
+			"email": "dev@dna.co.nz"
+		}
+	],
 	"minimum-stability": "dev",
 	"prefer-stable": true,
 	"require": {
@@ -24,13 +24,13 @@
 		"symbiote/silverstripe-queuedjobs": "^4"
 	},
 	"extra": {
-        "expose": [
-            "client/js"
-        ]
-    },
+		"expose": [
+			"client/js"
+		]
+	},
 	"autoload": {
-        "psr-4": {
-            "DNADesign\\GridFieldBulkDelete\\": "src/"
-        }
-    }
+		"psr-4": {
+			"DNADesign\\GridFieldBulkDelete\\": "src/"
+		}
+	}
 }
