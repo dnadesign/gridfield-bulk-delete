@@ -204,10 +204,9 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
         $this->message = sprintf('%s records have been successfully deleted.', count($ids));
         $this->status = 'good';
 
-        Controller::curr()->getResponse()->setStatusCode(
-            200,
-            $this->message
-        );
+        // set message as X-status header to prevent it getting stripped by certain servers
+        Controller::curr()->getResponse()->setStatusCode(200);
+        Controller::curr()->getResponse()->addHeader('X-Status', $this->message);
 
         return;
     }
