@@ -105,6 +105,7 @@ class QueuedBulkDeleteJob extends AbstractQueuedJob implements QueuedJob
             $this->addMessage($message, 'WARNING');
             Injector::inst()->get(LoggerInterface::class)->warning($message);
         } else {
+            $record->delete();
             $this->addMessage(sprintf('Deleted %s ID %s (%s)', $class, $ID, $record->dbObject('Created')->Nice()), 'WARNING');
         }
 
