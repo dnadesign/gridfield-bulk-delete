@@ -185,11 +185,10 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
 
             $this->message = sprintf('As more than %s records have to be deleted, a job as been queued in the background. You will get an email when the task is complete.', $this->use_queued_threshold);
             $this->status = 'warning';
-
-            Controller::curr()->getResponse()->setStatusCode(
-                200,
-                $this->message
-            );
+            
+            // set message as X-status header to prevent it getting stripped by certain servers
+            Controller::curr()->getResponse()->setStatusCode(200);
+            Controller::curr()->getResponse()->addHeader('X-Status', $this->message);
 
             return;
         }
