@@ -19,8 +19,9 @@
 	"prefer-stable": true,
 	"require": {
 		"silverstripe/cms": "^4.4@dev",
-        "silverstripe/admin": "^1.4@dev",
-        "silverstripe/vendor-plugin": "^1"
+    "silverstripe/admin": "^1.4@dev",
+    "silverstripe/vendor-plugin": "^1",
+		"symbiote/silverstripe-queuedjobs": "^4"
 	},
 	"extra": {
         "expose": [
