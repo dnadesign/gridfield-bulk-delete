@@ -116,7 +116,7 @@ class GridFieldBulkDeleteForm implements GridField_HTMLProvider, GridField_Actio
         );
 
         $button->setForm($gridField->getForm());
-        $button->addExtraClass('bulkdelete_button');
+        $button->addExtraClass('bulkdelete_button btn btn-secondary font-icon-trash');
 
         // Set message
         if ($this->message) {
