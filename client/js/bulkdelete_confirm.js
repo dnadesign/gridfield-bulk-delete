@@ -4,7 +4,7 @@
 		/**
 		 * force a confirm when clearing form submissions
 		 */
-		$('#Root .bulkdelete_button').entwine({
+		$('#Form_EditForm .bulkdelete_button').entwine({
 
 			onclick: function(e) {
 				var button = $(e.target),
