@@ -18,10 +18,8 @@
 	"minimum-stability": "dev",
 	"prefer-stable": true,
 	"require": {
-		"silverstripe/cms": "^4.4@dev",
-    "silverstripe/admin": "^1.4@dev",
-    "silverstripe/vendor-plugin": "^1",
-		"symbiote/silverstripe-queuedjobs": "^4"
+		"silverstripe/cms": "^4.4 || ^5",
+		"symbiote/silverstripe-queuedjobs": "^4 || ^5"
 	},
 	"extra": {
 		"expose": [
